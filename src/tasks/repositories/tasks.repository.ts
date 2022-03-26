@@ -1,5 +1,5 @@
 import { EntityRepository, Repository } from 'typeorm';
-import { User } from 'src/auth/entities';
+import { User } from 'src/users/entities';
 import { Pagination } from 'src/common/pagination';
 import { CreateTaskDto } from '../dto';
 import { GetTasksFilterDto } from '../dto';

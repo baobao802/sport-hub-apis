@@ -1,23 +1,30 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { TypeOrmModule } from '@nestjs/typeorm';
 import { PassportModule } from '@nestjs/passport';
 import { JwtModule } from '@nestjs/jwt';
-
-import { AuthService } from './services';
-import { AuthController } from './controllers';
-import { RolesRepository, UsersRepository } from './repositories';
-import { GoogleOauthStrategy, JwtAuthStrategy } from './strategies';
-import jwtConfig, { jwtConfigAsync } from 'src/configs/jwt.config';
+import { AuthService } from './auth.service';
+import { AuthController } from './auth.controller';
+import {
+  GoogleOauthStrategy,
+  JwtAuthStrategy,
+  JwtRefreshStrategy,
+} from './strategies';
+import jwtConfig, { jwtConfigAsync } from './configs/jwt.config';
+import { UsersModule } from 'src/users/users.module';
 
 @Module({
   imports: [
     ConfigModule.forFeature(jwtConfig),
     PassportModule.register({ defaultStrategy: 'jwt' }),
     JwtModule.registerAsync(jwtConfigAsync),
-    TypeOrmModule.forFeature([UsersRepository, RolesRepository]),
+    forwardRef(() => UsersModule),
   ],
-  providers: [AuthService, JwtAuthStrategy, GoogleOauthStrategy],
+  providers: [
+    AuthService,
+    JwtAuthStrategy,
+    JwtRefreshStrategy,
+    GoogleOauthStrategy,
+  ],
   controllers: [AuthController],
   exports: [AuthService],
 })

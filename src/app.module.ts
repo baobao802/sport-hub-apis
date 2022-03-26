@@ -3,11 +3,12 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule } from '@nestjs/config';
 import { TasksModule } from './tasks/tasks.module';
 import { AuthModule } from './auth/auth.module';
-import { FileModule } from './file/file.module';
-import httpConfig from './configs/http.config';
-import databaseConfig, { typeOrmConfigAsync } from './configs/typeorm.config';
+import { UsersModule } from './users/users.module';
+import { FilesModule } from './files/files.module';
 import { ScheduleModule } from '@nestjs/schedule';
 import { ChatModule } from './chat/chat.module';
+import httpConfig from './configs/http.config';
+import databaseConfig, { typeOrmConfigAsync } from './configs/typeorm.config';
 
 @Module({
   imports: [
@@ -17,11 +18,12 @@ import { ChatModule } from './chat/chat.module';
       cache: true,
     }),
     TypeOrmModule.forRootAsync(typeOrmConfigAsync),
-    ScheduleModule.forRoot(),
     AuthModule,
+    UsersModule,
     TasksModule,
-    FileModule,
+    FilesModule,
     ChatModule,
+    ScheduleModule.forRoot(),
   ],
 })
 export class AppModule {}

@@ -1,4 +1,7 @@
+import { Role } from 'src/roles/enum';
+
 export interface JwtPayload {
-  username: string;
+  email: string;
   sub: string;
+  roles: Role[];
 }

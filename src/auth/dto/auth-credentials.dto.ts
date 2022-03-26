@@ -1,4 +1,5 @@
 import {
+  IsEmail,
   IsEnum,
   IsOptional,
   IsString,
@@ -6,13 +7,13 @@ import {
   MaxLength,
   MinLength,
 } from 'class-validator';
-import { Role } from '../enum';
+import { Role } from 'src/roles/enum';
 
 export class AuthCredentialsDto {
   @MinLength(4)
   @MaxLength(20)
-  @IsString()
-  username: string;
+  @IsEmail()
+  email: string;
 
   @MinLength(8)
   @MaxLength(32)
@@ -21,8 +22,4 @@ export class AuthCredentialsDto {
   })
   @IsString()
   password: string;
-
-  @IsOptional()
-  @IsEnum(Role, { each: true })
-  roles?: Role[];
 }
