@@ -9,6 +9,7 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { ChatModule } from './chat/chat.module';
 import httpConfig from './configs/http.config';
 import databaseConfig, { typeOrmConfigAsync } from './configs/typeorm.config';
+import { EmailModule } from './email/email.module';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import databaseConfig, { typeOrmConfigAsync } from './configs/typeorm.config';
     FilesModule,
     ChatModule,
     ScheduleModule.forRoot(),
+    EmailModule,
   ],
 })
 export class AppModule {}
