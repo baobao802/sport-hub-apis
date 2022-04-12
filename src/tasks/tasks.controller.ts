@@ -27,11 +27,8 @@ export class TasksController {
 
   @Get()
   @Roles(Role.MODERATOR, Role.ADMIN)
-  getTasks(
-    @Query() filterDto: GetTasksFilterDto,
-    @GetUser() user: User,
-  ): Promise<Pagination<Task>> {
-    return this.tasksService.getTasks(filterDto, user);
+  getTasks(@Query() filterDto: GetTasksFilterDto): Promise<Pagination<Task>> {
+    return this.tasksService.getTasks(filterDto);
   }
 
   @Get('/:id')

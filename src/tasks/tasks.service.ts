@@ -7,6 +7,7 @@ import { GetTasksFilterDto, CreateTaskDto } from './dto';
 import { TasksRepository } from './repositories';
 import { TaskStatus } from './enum';
 import { Task } from './entities';
+import { ILike } from 'typeorm';
 
 @Injectable()
 export class TasksService {
@@ -17,11 +18,34 @@ export class TasksService {
     private tasksRepository: TasksRepository,
   ) {}
 
-  getTasks(
-    filterDto: GetTasksFilterDto,
-    user: User,
-  ): Promise<Pagination<Task>> {
-    return this.tasksRepository.getTasks(filterDto, user);
+  async getTasks(filterDto: GetTasksFilterDto): Promise<Pagination<Task>> {
+    const { status, search = '', page = 1, size = 10 } = filterDto;
+    const [tasks, count] = await this.tasksRepository.findAndCount({
+      where: [
+        { status },
+        { status, title: ILike(`%${search}%`) },
+        { status, description: ILike(`%${search}%`) },
+      ],
+      skip: (page - 1) * size,
+      take: size,
+    });
+
+    const totalItems = count;
+    const itemCount = tasks.length;
+    const itemsPerPage = size;
+    const totalPages = Math.ceil(totalItems / itemsPerPage);
+    const currentPage = page;
+
+    return {
+      items: tasks,
+      meta: {
+        itemCount,
+        totalItems,
+        itemsPerPage,
+        totalPages,
+        currentPage,
+      },
+    };
   }
 
   createTask(createTaskDto: CreateTaskDto, user: User): Promise<Task> {
@@ -63,25 +87,4 @@ export class TasksService {
   handleCron() {
     this.logger.debug('Called every 10 minutes');
   }
-
-  // getTasksWithFilter(filterDto: GetTasksFilterDto): Task[] {
-  //   const { status, search } = filterDto;
-
-  //   let tasks = this.getAllTasks();
-
-  //   if (status) {
-  //     tasks = tasks.filter((task) => task.status === status);
-  //   }
-
-  //   if (search) {
-  //     tasks = tasks.filter((task) => {
-  //       if (task.title.includes(search) || task.description.includes(search)) {
-  //         return true;
-  //       }
-  //       return false;
-  //     });
-  //   }
-
-  //   return tasks;
-  // }
 }

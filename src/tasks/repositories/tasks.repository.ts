@@ -63,20 +63,6 @@ export class TasksRepository extends Repository<Task> {
       user,
     });
 
-    await this.save(task);
-    return task;
+    return await this.save(task);
   }
 }
-
-/*
-  {
-    items: [],
-    meta: {
-      totalItems,
-      itemCount,
-      itemsPerPage,
-      totalPages,
-      currentPage
-    }
-  }
-*/
