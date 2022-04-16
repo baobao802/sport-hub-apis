@@ -15,7 +15,7 @@ import { Role } from 'src/roles/enum';
 import { Roles } from 'src/common/decorators';
 import { RolesGuard } from 'src/auth/guards';
 import { User } from 'src/users/entities';
-import { Pagination } from 'src/common/pagination';
+import { Pagination } from 'src/common/types';
 import { CreateTaskDto, GetTasksFilterDto, UpdateTaskStatusDto } from './dto';
 import { Task } from './entities';
 import { TasksService } from './tasks.service';
@@ -28,12 +28,12 @@ export class TasksController {
   @Get()
   @Roles(Role.MODERATOR, Role.ADMIN)
   getTasks(@Query() filterDto: GetTasksFilterDto): Promise<Pagination<Task>> {
-    return this.tasksService.getTasks(filterDto);
+    return this.tasksService.findTasks(filterDto);
   }
 
   @Get('/:id')
   getTaskById(@Param('id') id: string, @GetUser() user: User): Promise<Task> {
-    return this.tasksService.getTaskById(id, user);
+    return this.tasksService.findTaskById(id, user);
   }
 
   @Post()

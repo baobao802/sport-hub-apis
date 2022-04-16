@@ -11,7 +11,11 @@ import {
 } from './common/interceptors';
 
 async function bootstrap() {
-  const app = await NestFactory.create<NestExpressApplication>(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, {
+    cors: {
+      origin: 'http://localhost:3000',
+    },
+  });
   const configService = app.get(ConfigService);
   app.setGlobalPrefix(configService.get('http.globalPrefix'));
   app.useGlobalPipes(new ValidationPipe({ transform: true }));

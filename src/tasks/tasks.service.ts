@@ -1,24 +1,23 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Cron, CronExpression } from '@nestjs/schedule';
-import { Pagination } from 'src/common/pagination';
+import { Pagination } from 'src/common/types';
 import { User } from 'src/users/entities';
 import { GetTasksFilterDto, CreateTaskDto } from './dto';
-import { TasksRepository } from './repositories';
 import { TaskStatus } from './enum';
 import { Task } from './entities';
-import { ILike } from 'typeorm';
+import { ILike, Repository } from 'typeorm';
 
 @Injectable()
 export class TasksService {
   private readonly logger = new Logger(TasksService.name);
 
   constructor(
-    @InjectRepository(TasksRepository)
-    private tasksRepository: TasksRepository,
+    @InjectRepository(Task)
+    private tasksRepository: Repository<Task>,
   ) {}
 
-  async getTasks(filterDto: GetTasksFilterDto): Promise<Pagination<Task>> {
+  async findTasks(filterDto: GetTasksFilterDto): Promise<Pagination<Task>> {
     const { status, search = '', page = 1, size = 10 } = filterDto;
     const [tasks, count] = await this.tasksRepository.findAndCount({
       where: [
@@ -49,10 +48,19 @@ export class TasksService {
   }
 
   createTask(createTaskDto: CreateTaskDto, user: User): Promise<Task> {
-    return this.tasksRepository.createTask(createTaskDto, user);
+    const { title, description } = createTaskDto;
+
+    const task = this.tasksRepository.create({
+      title,
+      description,
+      status: TaskStatus.OPEN,
+      user,
+    });
+
+    return this.tasksRepository.save(task);
   }
 
-  async getTaskById(id: string, user: User): Promise<Task> {
+  async findTaskById(id: string, user: User): Promise<Task> {
     const found = await this.tasksRepository.findOne({ where: { id, user } });
 
     if (!found) {
@@ -75,7 +83,7 @@ export class TasksService {
     status: TaskStatus,
     user: User,
   ): Promise<Task> {
-    const task = await this.getTaskById(id, user);
+    const task = await this.findTaskById(id, user);
 
     task.status = status;
     await this.tasksRepository.save(task);

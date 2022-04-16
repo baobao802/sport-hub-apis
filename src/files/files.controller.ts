@@ -3,6 +3,7 @@ import {
   Get,
   Param,
   Post,
+  Query,
   Req,
   Res,
   StreamableFile,
@@ -16,6 +17,8 @@ import { Request, Response } from 'express';
 import { File } from './entities';
 import { FilesService } from './files.service';
 import { createReadStream } from 'fs';
+import { GetFilesFilterDto } from './dto';
+import { Pagination } from 'src/common/types';
 
 @Controller('files')
 export class FilesController {
@@ -63,5 +66,9 @@ export class FilesController {
     const stream = createReadStream(filepath);
 
     return new StreamableFile(stream);
+  }
+
+  getFiles(@Query() filterDto: GetFilesFilterDto): Promise<Pagination<File>> {
+    return this.filesService.findFiles(filterDto);
   }
 }

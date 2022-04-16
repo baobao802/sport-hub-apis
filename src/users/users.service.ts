@@ -1,19 +1,19 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as bcrypt from 'bcrypt';
+import { Pagination } from 'src/common/types';
 import { Role } from 'src/roles/entities';
 import { Role as ERole } from 'src/roles/enum';
 import { RolesService } from 'src/roles/roles.service';
-import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateProfileDto } from './dto/update-profile.dto';
+import { ILike, Repository } from 'typeorm';
+import { CreateUserDto, GetUsersFilterDto, UpdateProfileDto } from './dto';
 import { User } from './entities';
-import { UsersRepository } from './repositories';
 
 @Injectable()
 export class UsersService {
   constructor(
-    @InjectRepository(UsersRepository)
-    private usersRepository: UsersRepository,
+    @InjectRepository(User)
+    private usersRepository: Repository<User>,
     private rolesService: RolesService,
   ) {}
 
@@ -57,12 +57,43 @@ export class UsersService {
     return this.usersRepository.save(user);
   }
 
-  async findUsers(): Promise<User[]> {
-    return this.usersRepository.find();
+  async findUsers(filterDto: GetUsersFilterDto): Promise<Pagination<User>> {
+    const { search = '', page = 1, size = 10 } = filterDto;
+    const [users, count] = await this.usersRepository.findAndCount({
+      where: [
+        { firstName: ILike(`%${search}%`) },
+        { lastName: ILike(`%${search}%`) },
+        { email: ILike(`%${search}%`) },
+      ],
+      skip: (page - 1) * size,
+      take: size,
+    });
+
+    const totalItems = count;
+    const itemCount = users.length;
+    const itemsPerPage = size;
+    const totalPages = Math.ceil(totalItems / itemsPerPage);
+    const currentPage = page;
+
+    return {
+      items: users,
+      meta: {
+        itemCount,
+        totalItems,
+        itemsPerPage,
+        totalPages,
+        currentPage,
+      },
+    };
   }
 
   async findById(id: string): Promise<User> {
-    const found = this.usersRepository.findOne({ id });
+    const found = this.usersRepository.findOne({
+      where: {
+        id,
+      },
+      // withDeleted: true,
+    });
 
     if (!found) {
       throw new NotFoundException(`User with ${id} not found.`);
@@ -72,7 +103,21 @@ export class UsersService {
   }
 
   async findByEmail(email: string): Promise<User> {
-    return this.usersRepository.findOne({ email });
+    return this.usersRepository.findOne({ where: { email } });
+  }
+
+  async deleteUserById(id: string): Promise<void> {
+    const deleteRes = await this.usersRepository.softDelete(id);
+    if (!deleteRes.affected) {
+      throw new NotFoundException(`User with id ${id} not found.`);
+    }
+  }
+
+  async restoreUserById(id: string): Promise<void> {
+    const restoreRes = await this.usersRepository.restore(id);
+    if (!restoreRes.affected) {
+      throw new NotFoundException(`User with id ${id} not found.`);
+    }
   }
 
   async updateProfile(
