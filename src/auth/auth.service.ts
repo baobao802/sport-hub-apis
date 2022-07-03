@@ -10,8 +10,8 @@ import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { PostgresErrorCode } from 'src/common/enum';
-import { CreateUserDto } from 'src/users/dto';
-import { UsersService } from 'src/users/users.service';
+import { CreateUserDto } from 'src/user/dto';
+import { UsersService } from 'src/user/users.service';
 import { AuthCredentialsDto } from './dto';
 import { JwtPayload } from './interfaces';
 
@@ -26,7 +26,7 @@ export class AuthService {
 
   async signup(createUserDto: CreateUserDto) {
     try {
-      await this.usersService.create(createUserDto);
+      await this.usersService.createOne(createUserDto);
     } catch (error) {
       if (error.code === PostgresErrorCode.UniqueViolation) {
         throw new ConflictException('Email has already been taken.');
@@ -50,7 +50,14 @@ export class AuthService {
       const accessToken: string = await this.generateJwtAccessToken(payload);
       const refreshToken: string = await this.generateJwtRefreshToken(payload);
       this.usersService.setCurrentRefreshToken(refreshToken, user.id);
-      return { accessToken, refreshToken, email: user.email, userId: user.id };
+      return {
+        accessToken,
+        refreshToken,
+        user: {
+          id: user.id,
+          email: user.email,
+        },
+      };
     } else {
       throw new UnauthorizedException('Please check your login credentials!');
     }
@@ -68,7 +75,14 @@ export class AuthService {
     const refreshToken: string = await this.jwtService.sign(payload, {
       expiresIn: this.configService.get<string>('jwt.refreshTokenExpiration'),
     });
-    return { accessToken, refreshToken, email: user.email, userId: user.id };
+    return {
+      accessToken,
+      refreshToken,
+      user: {
+        id: user.id,
+        email: user.email,
+      },
+    };
   }
 
   async generateJwtAccessToken(payload: JwtPayload): Promise<string> {

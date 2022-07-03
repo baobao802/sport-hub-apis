@@ -10,7 +10,7 @@ import {
   JwtRefreshStrategy,
 } from './strategies';
 import jwtConfig, { jwtConfigAsync } from './configs/jwt.config';
-import { UsersModule } from 'src/users/users.module';
+import { UsersModule } from 'src/user/users.module';
 
 @Module({
   imports: [

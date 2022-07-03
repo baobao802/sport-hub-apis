@@ -1,13 +1,10 @@
 import {
   IsEmail,
-  IsEnum,
-  IsOptional,
   IsString,
   Matches,
   MaxLength,
   MinLength,
 } from 'class-validator';
-import { Role } from 'src/roles/enum';
 
 export class AuthCredentialsDto {
   @MinLength(4)

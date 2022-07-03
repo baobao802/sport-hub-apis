@@ -4,12 +4,12 @@ import {
   TypeOrmModuleOptions,
 } from '@nestjs/typeorm';
 
-export default registerAs('database', () => ({
-  port: parseInt(process.env.DATABASE_PORT, 10) || 5432,
-  host: process.env.DATABASE_HOST || 'localhost',
-  username: process.env.DATABASE_USERNAME || 'postgres',
-  password: process.env.DATABASE_PASSWORD || 'postgres',
-  name: process.env.DATABASE_NAME || 'demo',
+export default registerAs('db', () => ({
+  port: process.env.POSTGRES_PORT,
+  host: process.env.POSTGRES_HOST,
+  username: process.env.POSTGRES_USER,
+  password: process.env.POSTGRES_PASSWORD,
+  name: process.env.POSTGRES_DB,
 }));
 
 export const typeOrmConfigAsync: TypeOrmModuleAsyncOptions = {
@@ -18,11 +18,11 @@ export const typeOrmConfigAsync: TypeOrmModuleAsyncOptions = {
     configService: ConfigService,
   ): Promise<TypeOrmModuleOptions> => ({
     type: 'postgres',
-    host: configService.get<string>('database.host'),
-    port: configService.get<number>('database.port'),
-    username: configService.get<string>('database.username'),
-    password: configService.get<string>('database.password'),
-    database: configService.get<string>('database.name'),
+    host: configService.get<string>('db.host'),
+    port: configService.get<number>('db.port'),
+    username: configService.get<string>('db.username'),
+    password: configService.get<string>('db.password'),
+    database: configService.get<string>('db.name'),
     synchronize: true,
     autoLoadEntities: true,
   }),

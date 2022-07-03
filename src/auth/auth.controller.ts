@@ -11,8 +11,8 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { Response } from 'express';
 import { GetUser } from 'src/common/decorators';
-import { CreateUserDto } from 'src/users/dto';
-import { User } from 'src/users/entities';
+import { CreateUserDto } from 'src/user/dto';
+import { User } from 'src/user/entities';
 import { AuthService } from './auth.service';
 import { AuthCredentialsDto } from './dto';
 import { GoogleOauthGuard, JwtAuthGuard, JwtRefreshGuard } from './guards';

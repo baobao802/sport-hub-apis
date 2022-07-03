@@ -1,0 +1,54 @@
+version: '3.8'
+services:
+  postgres:
+    container_name: postgres
+    image: postgres:latest
+    ports:
+      - 5432:5432
+    volumes:
+      - postgres:/var/lib/postgresql/data
+    env_file:
+      - .env.development
+    networks:
+      - sport-net
+
+  pgadmin:
+    container_name: pgadmin
+    image: dpage/pgadmin4
+    ports:
+      - 8000:80
+    volumes:
+      - pgadmin:/var/lib/pgadmin
+    env_file:
+      - .env.development
+    networks:
+      - sport-net
+    depends_on:
+      - postgres
+
+  sport-hub-apis:
+    container_name: sport-hub-apis
+    image: sport-node
+    build: .
+    ports:
+      - 8080:80
+    volumes:
+      - .:/app
+      - uploads:/app/uploads
+      - /app/node_modules
+    env_file:
+      - .env.development
+    networks:
+      - sport-net
+    depends_on:
+      - postgres
+
+volumes:
+  postgres:
+  pgadmin:
+  uploads:
+
+
+networks:
+  sport-net:
+    driver: bridge

@@ -3,8 +3,8 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import emailConfig from './configs/email.config';
 import { AuthModule } from 'src/auth/auth.module';
-import EmailScheduleController from './emailSchedule.controller';
-import { EmailScheduleService } from './emailSchedule.service';
+import EmailScheduleController from './email-schedule.controller';
+import { EmailScheduleService } from './email-schedule.service';
 
 @Module({
   imports: [ConfigModule.forFeature(emailConfig), AuthModule],
