@@ -11,19 +11,19 @@ import { Address } from 'src/place/entities';
 export class UpdateProfileDto {
   @IsOptional()
   @IsString()
-  firstName: string;
+  firstName?: string;
 
   @IsOptional()
   @IsString()
-  lastName: string;
+  lastName?: string;
 
   @IsOptional()
   @MinLength(8, { message: 'Invalid phone number' })
   @MaxLength(13, { message: 'Invalid phone number' })
   @IsNumberString({}, { message: 'Invalid phone number' })
-  phoneNumber: string;
+  telephone?: string;
 
   @IsOptional()
   @IsObject()
-  address: Address;
+  address?: Address;
 }

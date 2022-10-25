@@ -13,12 +13,18 @@ import {
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule, {
     cors: {
-      origin: 'http://localhost:3000',
+      origin: ['http://localhost:3000', 'http://localhost:3001'],
+      credentials: true,
     },
   });
   const configService = app.get(ConfigService);
   app.setGlobalPrefix(configService.get('http.globalPrefix'));
-  app.useGlobalPipes(new ValidationPipe({ transform: true }));
+  app.useGlobalPipes(
+    new ValidationPipe({
+      transform: true,
+      // disableErrorMessages: true, disable this one in production environment
+    }),
+  );
   app.useGlobalInterceptors(
     new TransformInterceptor(),
     new ExcludeNullInterceptor(),

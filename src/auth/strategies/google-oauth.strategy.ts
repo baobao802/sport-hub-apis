@@ -2,7 +2,6 @@ import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PassportStrategy } from '@nestjs/passport';
 import { Profile, Strategy } from 'passport-google-oauth20';
-import { Role } from 'src/permission/enum';
 import { UsersService } from 'src/user/users.service';
 
 @Injectable()
@@ -20,7 +19,7 @@ export class GoogleOauthStrategy extends PassportStrategy(Strategy, 'google') {
   }
 
   async validate(_accessToken, _refreshToken, profile: Profile) {
-    const { id, emails, name } = profile;
+    const { emails, name } = profile;
     const email = emails[0].value;
     const found = await this.usersService.findByEmail(email);
 
@@ -43,6 +42,7 @@ export class GoogleOauthStrategy extends PassportStrategy(Strategy, 'google') {
       id: found.id,
       email: found.email,
       roles: found.roles,
+      club: found?.club,
     };
   }
 

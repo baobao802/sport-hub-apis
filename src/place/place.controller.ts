@@ -15,10 +15,10 @@ import { CreateCityDto, CreateDistrictDto, ImportPlacesDto } from './dto';
 import { City, District } from './entities';
 
 @Controller('places')
-@UseGuards(RolesGuard)
 export class PlaceController {
   constructor(private placeService: PlaceService) {}
 
+  @UseGuards(RolesGuard)
   @Post('/import')
   importPlaceData(@Body() importPlacesDto: ImportPlacesDto) {
     return this.placeService.importPlaceData(importPlacesDto);
@@ -30,6 +30,7 @@ export class PlaceController {
   }
 
   @Roles(Role.ADMIN)
+  @UseGuards(RolesGuard)
   @Post('/cities')
   createCity(@Body() createCityDto: CreateCityDto): Promise<City> {
     return this.placeService.createCity(createCityDto);
@@ -41,6 +42,7 @@ export class PlaceController {
   }
 
   @Roles(Role.ADMIN)
+  @UseGuards(RolesGuard)
   @Post('/districts')
   createDistrict(
     @Body() createDistrictDto: CreateDistrictDto,
@@ -49,6 +51,7 @@ export class PlaceController {
   }
 
   @Roles(Role.ADMIN)
+  @UseGuards(RolesGuard)
   @Delete('/cities/:id')
   deleteCity(@Param('id') id: string) {
     return this.placeService.deleteCity(id);

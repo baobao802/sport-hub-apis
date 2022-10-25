@@ -1,9 +1,10 @@
-import { Office } from 'src/office/entities';
+import { Hub } from 'src/hub/entities';
 import { User } from 'src/user/entities';
 import {
   Column,
   Entity,
   JoinColumn,
+  ManyToOne,
   OneToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
@@ -15,24 +16,21 @@ export class Address {
   id: number;
 
   @Column()
-  address: string;
-
-  @Column()
   street: string;
 
-  @OneToOne(() => District, { eager: true })
+  @ManyToOne(() => District, (district) => district.address, { eager: true })
   @JoinColumn()
   district: District;
 
-  @Column({ nullable: true })
-  lat: number;
+  // @Column({ nullable: true })
+  // lat: number;
 
-  @Column({ nullable: true })
-  lng: number;
+  // @Column({ nullable: true })
+  // lng: number;
 
   @OneToOne(() => User, (user) => user.address)
   user: User;
 
-  @OneToOne(() => Office, (office) => office.address)
-  office: Office;
+  @OneToOne(() => Hub, (hub) => hub.address)
+  hub: Hub;
 }

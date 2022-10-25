@@ -35,6 +35,6 @@ export class JwtAuthStrategy extends PassportStrategy(Strategy) {
     }
 
     const roles = user.roles.map(({ name }) => name);
-    return { id: user.id, email: user.email, roles };
+    return { id: user.id, email: user.email, roles, clubId: user?.club?.id };
   }
 }

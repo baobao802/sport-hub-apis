@@ -8,23 +8,27 @@ import {
   MaxLength,
   MinLength,
 } from 'class-validator';
+import { Hub } from 'src/hub/entities';
 import { Role } from 'src/permission/enum';
+import { Address } from 'src/place/entities';
 
 export class CreateUserDto {
   @IsString()
-  firstName: string;
+  @IsOptional()
+  firstName?: string;
 
   @IsString()
-  lastName: string;
+  @IsOptional()
+  lastName?: string;
 
   @IsOptional()
   @MinLength(8, { message: 'Invalid phone number' })
   @MaxLength(13, { message: 'Invalid phone number' })
   @IsNumberString({}, { message: 'Invalid phone number' })
-  phoneNumber?: string;
+  telephone?: string;
 
   @MinLength(4)
-  @MaxLength(20)
+  @MaxLength(25)
   @IsEmail()
   email: string;
 
@@ -39,4 +43,10 @@ export class CreateUserDto {
   @IsOptional()
   @IsEnum(Role, { each: true })
   roles?: Role[];
+
+  @IsOptional()
+  address?: Address;
+
+  @IsOptional()
+  hub?: Hub;
 }

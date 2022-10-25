@@ -18,16 +18,40 @@ export class PlaceService {
     private citesRepository: Repository<City>,
   ) {}
 
-  async getDistricts(cityId: number): Promise<District[]> {
-    return await this.districtsRepository.findBy({
-      city: {
-        id: cityId,
-      },
-    });
+  async getCities(): Promise<City[]> {
+    return this.citesRepository.find();
   }
 
-  async getCities(): Promise<City[]> {
-    return await this.citesRepository.find();
+  async importPlaceData(importPlacesDto: ImportPlacesDto): Promise<City[]> {
+    const results: City[] = [];
+
+    await this.citesRepository.clear();
+    for (const city of importPlacesDto.cities) {
+      const createdCity = await this.citesRepository.save({
+        name: city.name,
+        districts: city.districts,
+      });
+      results.push(createdCity);
+    }
+    return results;
+  }
+
+  async createCity(createCityDto: CreateCityDto): Promise<City> {
+    const { name } = createCityDto;
+
+    const found = await this.citesRepository.findOneBy({ name });
+    if (found) {
+      throw new ConflictException('City has already been taken.');
+    }
+
+    const city = this.citesRepository.create({
+      name,
+    });
+    return this.citesRepository.save(city);
+  }
+
+  deleteCity(id: string) {
+    return this.citesRepository.delete(+id);
   }
 
   async createDistrict(
@@ -49,39 +73,14 @@ export class PlaceService {
       name,
       city: foundCity,
     });
-    return await this.districtsRepository.save(district);
+    return this.districtsRepository.save(district);
   }
 
-  async createCity(createCityDto: CreateCityDto): Promise<City> {
-    const { name, country } = createCityDto;
-
-    const found = await this.citesRepository.findOneBy({ name });
-    if (found) {
-      throw new ConflictException('City has already been taken.');
-    }
-
-    const city = this.citesRepository.create({
-      name,
-      country,
+  async getDistricts(cityId: number): Promise<District[]> {
+    return this.districtsRepository.findBy({
+      city: {
+        id: cityId,
+      },
     });
-    return await this.citesRepository.save(city);
-  }
-
-  async importPlaceData(importPlacesDto: ImportPlacesDto): Promise<City[]> {
-    const results: City[] = [];
-
-    for (const city of importPlacesDto.cities) {
-      const createdCity = await this.citesRepository.save({
-        name: city.name,
-        country: importPlacesDto.country,
-        districts: city.districts,
-      });
-      results.push(createdCity);
-    }
-    return results;
-  }
-
-  deleteCity(id: string) {
-    return this.citesRepository.delete(+id);
   }
 }

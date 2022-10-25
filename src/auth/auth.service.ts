@@ -10,7 +10,9 @@ import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { PostgresErrorCode } from 'src/common/enum';
+import { Role } from 'src/permission/enum';
 import { CreateUserDto } from 'src/user/dto';
+import { User } from 'src/user/entities';
 import { UsersService } from 'src/user/users.service';
 import { AuthCredentialsDto } from './dto';
 import { JwtPayload } from './interfaces';
@@ -28,8 +30,11 @@ export class AuthService {
     try {
       await this.usersService.createOne(createUserDto);
     } catch (error) {
+      console.log(error);
       if (error.code === PostgresErrorCode.UniqueViolation) {
-        throw new ConflictException('Email has already been taken.');
+        throw new ConflictException(
+          'Email or phone number has already been taken',
+        );
       } else {
         throw new InternalServerErrorException();
       }
@@ -47,15 +52,21 @@ export class AuthService {
         sub: user.id,
         roles,
       };
-      const accessToken: string = await this.generateJwtAccessToken(payload);
-      const refreshToken: string = await this.generateJwtRefreshToken(payload);
+      const accessToken: string = this.generateJwtAccessToken(payload);
+      const refreshToken: string = this.generateJwtRefreshToken(payload);
       this.usersService.setCurrentRefreshToken(refreshToken, user.id);
+
       return {
         accessToken,
         refreshToken,
         user: {
           id: user.id,
           email: user.email,
+          roles: user.roles,
+          hub: {
+            id: user.hub.id,
+            name: user.hub.name,
+          },
         },
       };
     } else {
@@ -63,36 +74,39 @@ export class AuthService {
     }
   }
 
-  async loginWithGoogle(user) {
+  async loginWithGoogle(user: User) {
     const payload: JwtPayload = {
       email: user.email,
       sub: user.id,
-      roles: user.roles,
+      roles: user.roles as unknown as Role[],
     };
-    const accessToken: string = await this.jwtService.sign(payload, {
-      expiresIn: this.configService.get<string>('jwt.accessTokenExpiration'),
-    });
-    const refreshToken: string = await this.jwtService.sign(payload, {
-      expiresIn: this.configService.get<string>('jwt.refreshTokenExpiration'),
-    });
+    const accessToken: string = this.generateJwtAccessToken(payload);
+    const refreshToken: string = this.generateJwtRefreshToken(payload);
+    this.usersService.setCurrentRefreshToken(refreshToken, user.id);
     return {
       accessToken,
       refreshToken,
       user: {
         id: user.id,
         email: user.email,
+        roles: user.roles as unknown as Role[],
+        club: user?.club && {
+          id: user.club.id,
+          name: user.club.name,
+          avatar: user.club.avatar,
+        },
       },
     };
   }
 
-  async generateJwtAccessToken(payload: JwtPayload): Promise<string> {
+  generateJwtAccessToken(payload: JwtPayload): string {
     return this.jwtService.sign(payload, {
       expiresIn: this.configService.get<string>('jwt.accessTokenExpiration'),
     });
   }
 
-  async generateJwtRefreshToken(payload: JwtPayload): Promise<string> {
-    return await this.jwtService.sign(payload, {
+  generateJwtRefreshToken(payload: JwtPayload): string {
+    return this.jwtService.sign(payload, {
       expiresIn: this.configService.get<string>('jwt.refreshTokenExpiration'),
     });
   }

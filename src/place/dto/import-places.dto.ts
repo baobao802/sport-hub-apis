@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsString } from 'class-validator';
+import { IsNotEmpty } from 'class-validator';
 
 export class ImportPlacesDto {
   @IsNotEmpty()
@@ -8,8 +8,4 @@ export class ImportPlacesDto {
       name: string;
     }[];
   }[];
-
-  @IsString()
-  @IsNotEmpty()
-  country: string;
 }

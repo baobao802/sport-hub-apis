@@ -11,7 +11,7 @@ export default class EmailScheduleController {
   constructor(private emailScheduleService: EmailScheduleService) {}
 
   @Post('schedule')
-  @Roles(Role.MODERATOR, Role.ADMIN)
+  @Roles(Role.LESSOR, Role.ADMIN)
   async scheduleEmail(@Body() emailSchedule: EmailScheduleDto) {
     this.emailScheduleService.scheduleEmail(emailSchedule);
   }

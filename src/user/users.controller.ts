@@ -30,10 +30,10 @@ export class UsersController {
   @Get()
   @Roles(Role.ADMIN)
   getUsers(
-    @Query() { search }: UserFilterParams,
+    @Query() { search, role }: UserFilterParams,
     @Query() { page, size }: PaginationParams,
   ) {
-    return this.usersService.findAll({ search, page, size });
+    return this.usersService.findAll({ search, role, page, size });
   }
 
   @Get(':id')
@@ -53,6 +53,18 @@ export class UsersController {
     @Body() updateProfileDto: UpdateProfileDto,
   ) {
     return this.usersService.updateProfile(user, updateProfileDto);
+  }
+
+  @Patch(':id/lock')
+  @Roles(Role.ADMIN)
+  lockUser(@Param('id') id: string) {
+    return this.usersService.lockUser(id);
+  }
+
+  @Patch(':id/unlock')
+  @Roles(Role.ADMIN)
+  unlockUser(@Param('id') id: string) {
+    return this.usersService.unlockUser(id);
   }
 
   @Delete(':id')
