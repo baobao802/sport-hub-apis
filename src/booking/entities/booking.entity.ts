@@ -1,6 +1,6 @@
 import { Exclude, Transform } from 'class-transformer';
+import { AppUser } from 'src/common/types';
 import { Pitch } from 'src/hub/entities';
-import { User } from 'src/user/entities';
 import {
   Column,
   CreateDateColumn,
@@ -32,8 +32,14 @@ export class Booking {
   @Exclude()
   cityId: number;
 
-  @ManyToOne(() => User, (customer) => customer.bookings)
-  customer: User;
+  @Column({ nullable: false })
+  customerId: string;
+
+  @Column({ nullable: false, type: 'jsonb' })
+  customerInfo: AppUser;
+
+  // @ManyToOne(() => User, (customer) => customer.bookings)
+  // customer: User;
 
   @ManyToOne(() => Pitch, (pitch) => pitch.bookings)
   pitch: Pitch;

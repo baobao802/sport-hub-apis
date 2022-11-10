@@ -1,31 +1,15 @@
 import { forwardRef, Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { PassportModule } from '@nestjs/passport';
-import { JwtModule } from '@nestjs/jwt';
 import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
-import {
-  GoogleOauthStrategy,
-  JwtAuthStrategy,
-  JwtRefreshStrategy,
-} from './strategies';
-import jwtConfig, { jwtConfigAsync } from './configs/jwt.config';
-import { UsersModule } from 'src/user/users.module';
+import { HttpModule } from '@nestjs/axios';
+import { KeycloakAuthStrategy } from './strategies';
+import keycloakConfig from 'src/configs/keycloak.config';
 
 @Module({
-  imports: [
-    ConfigModule.forFeature(jwtConfig),
-    PassportModule.register({ defaultStrategy: 'jwt' }),
-    JwtModule.registerAsync(jwtConfigAsync),
-    forwardRef(() => UsersModule),
-  ],
-  providers: [
-    AuthService,
-    JwtAuthStrategy,
-    JwtRefreshStrategy,
-    GoogleOauthStrategy,
-  ],
+  imports: [ConfigModule.forFeature(keycloakConfig), HttpModule],
+  providers: [AuthService, KeycloakAuthStrategy],
   controllers: [AuthController],
-  exports: [AuthService],
+  exports: [AuthService, KeycloakAuthStrategy],
 })
 export class AuthModule {}

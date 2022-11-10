@@ -1,4 +1,4 @@
-import { IsNumber } from 'class-validator';
+import { IsNumber, IsOptional } from 'class-validator';
 
 export class BookingDto {
   @IsNumber()
@@ -10,4 +10,7 @@ export class BookingDto {
   cost: number;
 
   date: string;
+
+  @IsOptional()
+  cityId: number;
 }

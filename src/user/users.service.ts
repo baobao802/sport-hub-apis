@@ -112,13 +112,13 @@ export class UsersService {
   }
 
   async findByEmail(email: string) {
-    return this.usersRepository.findOne({
-      where: { email },
-      relations: {
-        club: true,
-        hub: true,
-      },
-    });
+    // return this.usersRepository.findOne({
+    //   where: { email },
+    //   relations: {
+    //     club: true,
+    //     hub: true,
+    //   },
+    // });
   }
 
   async lockUser(id: string) {

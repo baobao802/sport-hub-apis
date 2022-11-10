@@ -1,7 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { User } from 'src/user/entities';
-import { UsersService } from 'src/user/users.service';
+import { AppUser } from 'src/common/types';
 import { Repository } from 'typeorm';
 import { CreateClubDto, UpdateClubDto } from './dto';
 import { Club } from './entities';
@@ -11,18 +10,12 @@ export class ClubService {
   constructor(
     @InjectRepository(Club)
     private clubRepository: Repository<Club>,
-    private userService: UsersService,
   ) {}
 
-  async createOne(createClubDto: CreateClubDto, user: User) {
-    const { telephone, address, ...rest } = createClubDto;
-    const updatedUser = await this.userService.updateProfile(user, {
-      address,
-      telephone,
-    });
+  async createOne(createClubDto: CreateClubDto, user: AppUser) {
     const club = this.clubRepository.create({
-      ...rest,
-      manager: updatedUser,
+      ...createClubDto,
+      managerId: user.sub,
     });
 
     return this.clubRepository.save(club);

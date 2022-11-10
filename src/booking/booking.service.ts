@@ -10,13 +10,14 @@ import {
 import { SchedulerRegistry } from '@nestjs/schedule';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CronJob } from 'cron';
-import moment from 'moment';
+import * as _ from 'lodash';
+import * as moment from 'moment';
+import { Role } from 'src/auth/types';
 import { PaginationParams } from 'src/common/dto';
 import { Pagination } from 'src/common/interfaces';
+import { AppUser } from 'src/common/types';
 import { EmailService } from 'src/email/email.service';
-import { HubsService } from 'src/hub/hub.service';
-import { Role } from 'src/permission/enum';
-import { User } from 'src/user/entities';
+import { HubService } from 'src/hub/hub.service';
 import { createPaginationResponse } from 'src/utils';
 import { FindManyOptions, Repository } from 'typeorm';
 import { BookingDto, BookingFilterParams } from './dto';
@@ -30,17 +31,19 @@ export class BookingService {
   constructor(
     @InjectRepository(Booking)
     private bookingRepository: Repository<Booking>,
-    @Inject(forwardRef(() => HubsService))
-    private hubService: HubsService,
+    @Inject(forwardRef(() => HubService))
+    private hubService: HubService,
     private schedulerRegistry: SchedulerRegistry,
     private emailService: EmailService,
   ) {}
 
-  async createOne(bookingDto: BookingDto, user: User) {
+  async createOne(bookingDto: BookingDto, user: AppUser) {
     const pitch = await this.hubService.findPitchById(bookingDto.pitchId);
     const booking = this.bookingRepository.create({
-      customer: user,
+      customerId: user.sub,
+      customerInfo: user,
       pitch,
+      cityId: bookingDto.cityId,
       cost: bookingDto.cost,
       time: bookingDto.time,
       status: BookingStatus.DONE,
@@ -69,7 +72,7 @@ export class BookingService {
 
   async findAll(
     options: BookingFilterParams & PaginationParams,
-    user?: User,
+    user?: AppUser,
   ): Promise<Pagination<Booking>> {
     const { cityId, status, date, pitchId, page = 1, size = 20 } = options;
     const findOptions: FindManyOptions<Booking> = {
@@ -80,18 +83,25 @@ export class BookingService {
         status,
       },
     };
-    if (user && (user.roles[0] as any) === Role.CUSTOMER) {
-      findOptions.where = { ...findOptions.where, customer: { id: user.id } };
+
+    if (
+      user &&
+      _.includes(user.resource_access['sport-hub']?.roles, Role.APP_USER)
+    ) {
+      findOptions.where = { ...findOptions.where, customerId: user.sub };
       findOptions.relations = { pitch: { hub: true } };
     }
-    if (user && (user.roles[0] as any) === Role.LESSOR) {
+    if (
+      user &&
+      _.includes(user.resource_access['sport-hub']?.roles, Role.APP_ADMIN)
+    ) {
       findOptions.where = {
         ...findOptions.where,
         pitch: {
-          hub: { owner: { id: user.id } },
+          hub: { ownerId: user.sub },
         },
       };
-      findOptions.relations = { pitch: true, customer: true };
+      findOptions.relations = { pitch: true };
     }
     const [bookings, count] = await this.bookingRepository.findAndCount({
       order: { createdAt: 'DESC' },
@@ -104,7 +114,7 @@ export class BookingService {
     return createPaginationResponse(bookings, count, page, size);
   }
 
-  async cancelBooking(bookingId: number, user: User) {
+  async cancelBooking(bookingId: number, user: AppUser) {
     const found = await this.bookingRepository.findOneBy({ id: bookingId });
 
     if (!found) {
@@ -120,10 +130,7 @@ export class BookingService {
     }
 
     const deleteRes = await this.bookingRepository.update(
-      {
-        customer: user,
-        id: bookingId,
-      },
+      { customerId: user.sub, id: bookingId },
       { status: BookingStatus.CANCEL, deletedAt: new Date() },
     );
 

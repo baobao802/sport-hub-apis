@@ -7,6 +7,7 @@ services:
       - 5432:5432
     volumes:
       - postgres:/var/lib/postgresql/data
+      # - postgres01:/var/lib/postgresql/data
     env_file:
       - .env.development
     networks:
@@ -19,6 +20,18 @@ services:
       - 8000:80
     volumes:
       - pgadmin:/var/lib/pgadmin
+    env_file:
+      - .env.development
+    networks:
+      - sport-net
+    depends_on:
+      - postgres
+
+  keycloak:
+    container_name: keycloak
+    image: quay.io/keycloak/keycloak:legacy
+    ports:
+      - 8081:8080
     env_file:
       - .env.development
     networks:
@@ -41,12 +54,41 @@ services:
     networks:
       - sport-net
     depends_on:
-      - postgres
+      - keycloak
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.9.1
+    container_name: elasticsearch
+    environment:
+      - node.name=elasticsearch
+      - http.port=9200
+      - http.host=0.0.0.0
+      - transport.host=127.0.0.1
+      - cluster.name=es-docker-cluster
+      - discovery.seed_hosts=elasticsearch
+      - cluster.initial_master_nodes=elasticsearch
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - elastic:/var/lib/elasticsearch
+      - elastic_db:/usr/share/elasticsearch/data
+      - ./synonym.txt:/usr/share/elasticsearch/config/synonym.txt
+    ports:
+      - 9200:9200
+    networks:
+      - sport-net
 
 volumes:
   postgres:
+  # postgres01:
   pgadmin:
   uploads:
+  elastic:
+  elastic_db:
 
 
 networks:

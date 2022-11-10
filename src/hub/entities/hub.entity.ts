@@ -10,7 +10,6 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 import { Address } from 'src/place/entities';
-import { User } from 'src/user/entities';
 import { Pitch } from './pitch.entity';
 
 @Entity()
@@ -18,11 +17,14 @@ export class Hub {
   @PrimaryGeneratedColumn('increment')
   id: number;
 
-  @Column({ nullable: true })
-  picture: string;
+  @Column()
+  ownerId: string;
 
   @Column({ length: 120 })
   name: string;
+
+  @Column({ nullable: true })
+  picture: string;
 
   @OneToOne(() => Address, { eager: true, cascade: true })
   @JoinColumn()
@@ -37,8 +39,8 @@ export class Hub {
   @DeleteDateColumn()
   deletedAt: Date;
 
-  @OneToOne(() => User, (user) => user.hub, { eager: true })
-  owner: User;
+  // @OneToOne(() => User, (user) => user.hub, { eager: true })
+  // Id: User;
 
   @OneToMany(() => Pitch, (pitch) => pitch.hub, {
     eager: true,

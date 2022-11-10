@@ -66,14 +66,14 @@ export class User {
   @JoinColumn()
   address: Address;
 
-  @OneToOne(() => Club, { cascade: true })
-  @JoinColumn()
-  club: Club;
+  // @OneToOne(() => Club, { cascade: true })
+  // @JoinColumn()
+  // club: Club;
 
-  @OneToOne(() => Hub, { cascade: true })
-  @JoinColumn()
-  hub: Hub;
+  // @OneToOne(() => Hub, { cascade: true })
+  // @JoinColumn()
+  // hub: Hub;
 
-  @OneToMany(() => Booking, (booking) => booking.customer)
-  bookings: Booking[];
+  // @OneToMany(() => Booking, (booking) => booking.customer)
+  // bookings: Booking[];
 }

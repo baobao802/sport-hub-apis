@@ -1,6 +1,5 @@
 import { IsEnum, IsOptional } from 'class-validator';
-import { Cost } from '../entities/cost.entity';
-import { PitchType } from '../types';
+import { CostType, PitchType } from '../types';
 
 export class UpdatePitchDto {
   @IsOptional()
@@ -11,5 +10,5 @@ export class UpdatePitchDto {
   type: PitchType;
 
   @IsOptional()
-  cost: Cost[];
+  cost: CostType[];
 }

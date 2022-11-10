@@ -25,7 +25,6 @@ export class PlaceService {
   async importPlaceData(importPlacesDto: ImportPlacesDto): Promise<City[]> {
     const results: City[] = [];
 
-    await this.citesRepository.clear();
     for (const city of importPlacesDto.cities) {
       const createdCity = await this.citesRepository.save({
         name: city.name,

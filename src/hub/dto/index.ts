@@ -1,3 +1,4 @@
+export { CreateHubDto } from './create-hub.dto';
 export { UpdateHubDto } from './update-hub.dto';
 export { HubFilterParams } from './hub-filter-params.dto';
 export { PitchFilterParams } from './pitch-filter-params.dto';

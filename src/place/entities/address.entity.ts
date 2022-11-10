@@ -1,5 +1,4 @@
 import { Hub } from 'src/hub/entities';
-import { User } from 'src/user/entities';
 import {
   Column,
   Entity,
@@ -28,8 +27,8 @@ export class Address {
   // @Column({ nullable: true })
   // lng: number;
 
-  @OneToOne(() => User, (user) => user.address)
-  user: User;
+  // @OneToOne(() => User, (user) => user.address)
+  // user: User;
 
   @OneToOne(() => Hub, (hub) => hub.address)
   hub: Hub;

@@ -9,8 +9,8 @@ import {
 } from '@nestjs/common';
 import { RolesGuard } from 'src/auth/guards';
 import { GetUser, Roles } from 'src/common/decorators';
+import { AppUser } from 'src/common/types';
 import { Role } from 'src/permission/enum';
-import { User } from 'src/user/entities';
 import { ClubService } from './club.service';
 import { CreateClubDto, UpdateClubDto } from './dto';
 
@@ -31,7 +31,7 @@ export class ClubController {
   @Post()
   @Roles(Role.CUSTOMER)
   @UseGuards(RolesGuard)
-  createClub(@Body() createClubDto: CreateClubDto, @GetUser() user: User) {
+  createClub(@Body() createClubDto: CreateClubDto, @GetUser() user: AppUser) {
     return this.clubService.createOne(createClubDto, user);
   }
 

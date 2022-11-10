@@ -1,6 +1,5 @@
-import { Column, Entity, OneToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 import { ClubMember } from '../types';
-import { User } from 'src/user/entities';
 
 @Entity()
 export class Club {
@@ -19,6 +18,6 @@ export class Club {
   @Column({ type: 'jsonb' })
   members: ClubMember[];
 
-  @OneToOne(() => User, (user) => user.club, { eager: true })
-  manager: User;
+  @Column({ nullable: false })
+  managerId: string;
 }

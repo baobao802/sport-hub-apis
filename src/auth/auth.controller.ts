@@ -2,149 +2,118 @@ import {
   Body,
   Controller,
   Get,
-  HttpCode,
-  HttpStatus,
   Post,
-  Redirect,
+  Req,
   Res,
   UseGuards,
 } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import { Response } from 'express';
+import { Request, Response } from 'express';
+import { Public } from 'nest-keycloak-connect';
 import { GetUser } from 'src/common/decorators';
-import { CreateUserDto } from 'src/user/dto';
-import { User } from 'src/user/entities';
+import { AppUser } from 'src/common/types';
 import { AuthService } from './auth.service';
-import { AuthCredentialsDto } from './dto';
-import { GoogleOauthGuard, JwtAuthGuard, JwtRefreshGuard } from './guards';
-import { JwtPayload, LoginResponse } from './interfaces';
+import { LoginDto, RegisterDto } from './dto';
+import { KeycloakAuthGuard } from './guards';
 
 @Controller('auth')
 export class AuthController {
-  constructor(
-    private authService: AuthService,
-    private configServer: ConfigService,
-  ) {}
+  constructor(private authService: AuthService) {}
 
-  @Post('signup')
-  signup(@Body() createUserDto: CreateUserDto) {
-    return this.authService.signup(createUserDto);
+  @Get('welcome')
+  @UseGuards(KeycloakAuthGuard)
+  async welcome(@GetUser() user: AppUser) {
+    return 'Welcome ' + user.preferred_username;
+  }
+
+  @Get('authenticate')
+  @UseGuards(KeycloakAuthGuard)
+  async authenticate(@Req() request: Request) {
+    const accessToken = request.cookies['access_token'];
+    return this.authService.authenticate(accessToken);
+  }
+
+  @Post('google')
+  async loginGoogle(
+    @Body('accessToken') accessToken: string,
+    @Res({ passthrough: true }) response: Response,
+  ) {
+    const loginRes = await this.authService.loginGoogle(accessToken);
+    response.cookie('access_token', loginRes.access_token, {
+      maxAge: loginRes.expires_in * 1000,
+      httpOnly: true,
+      sameSite: 'strict',
+    });
+    response.cookie('refresh_token', loginRes.refresh_token, {
+      maxAge: loginRes.refresh_expires_in * 1000,
+      httpOnly: true,
+      sameSite: 'strict',
+    });
+    return loginRes;
   }
 
   @Post('login')
-  @HttpCode(HttpStatus.OK)
   async login(
-    @Res({ passthrough: true }) res: Response,
-    @Body() authCredentialsDto: AuthCredentialsDto,
-  ): Promise<LoginResponse> {
-    const loginResponse = await this.authService.login(authCredentialsDto);
-    this.handleLoginResponseData(res, loginResponse);
-    return loginResponse;
+    @Body() loginDto: LoginDto,
+    @Res({ passthrough: true }) response: Response,
+  ) {
+    const loginRes = await this.authService.login(loginDto);
+    response.cookie('access_token', loginRes.access_token, {
+      maxAge: loginRes.expires_in * 1000,
+      httpOnly: true,
+      sameSite: 'strict',
+    });
+    response.cookie('refresh_token', loginRes.refresh_token, {
+      maxAge: loginRes.refresh_expires_in * 1000,
+      httpOnly: true,
+      sameSite: 'strict',
+    });
+    return loginRes;
+  }
+
+  @Post('register')
+  signup(@Body() registerDto: RegisterDto) {
+    return this.authService.register(registerDto);
+  }
+
+  @Get('refresh-token')
+  async refreshToken(
+    @Req() request: Request,
+    @Res({ passthrough: true }) response: Response,
+  ) {
+    const accessToken = request.cookies['access_token'];
+    const refreshToken = request.cookies['refresh_token'];
+    const tokenResponse = await this.authService.refreshToken(
+      accessToken,
+      refreshToken,
+    );
+    response.cookie('access_token', tokenResponse.access_token, {
+      maxAge: tokenResponse.expires_in * 1000,
+      httpOnly: true,
+      sameSite: 'strict',
+    });
+    response.cookie('refresh_token', tokenResponse.refresh_token, {
+      maxAge: tokenResponse.refresh_expires_in * 1000,
+      httpOnly: true,
+      sameSite: 'strict',
+    });
   }
 
   @Post('logout')
-  @HttpCode(HttpStatus.OK)
-  @UseGuards(JwtAuthGuard)
   async logout(
-    @GetUser() user: User,
-    @Res({ passthrough: true }) res: Response,
+    @Req() request: Request,
+    @Res({ passthrough: true }) response: Response,
   ) {
-    await this.authService.removeRefreshTokenByUser(user.id);
-    res.cookie('access_token', '', {
-      httpOnly: true,
-      expires: new Date(Date.now()),
-      path: '/',
-      secure: this.configServer.get<boolean>('http.secure'),
-    });
-    res.cookie('refresh_token', '', {
-      httpOnly: true,
-      expires: new Date(Date.now()),
-      path: '/',
-      secure: this.configServer.get<boolean>('http.secure'),
-    });
-    res.cookie('logged_in', false, {
-      httpOnly: false,
-      expires: new Date(Date.now()),
-      path: '/',
-    });
-  }
+    const accessToken = request.cookies['access_token'];
+    const refreshToken = request.cookies['refresh_token'];
 
-  @Get('google')
-  @UseGuards(GoogleOauthGuard)
-  googleAuth() {
-    // Guard redirects
-  }
-
-  @Get('google/redirect')
-  @Redirect(process.env.SPORT_HUB_URL)
-  @UseGuards(GoogleOauthGuard)
-  async googleAuthRedirect(
-    @GetUser() user: User,
-    @Res({ passthrough: true }) res: Response,
-  ): Promise<LoginResponse> {
-    const loginResponse = await this.authService.loginWithGoogle(user);
-    this.handleLoginResponseData(res, loginResponse);
-    return loginResponse;
-  }
-
-  @Get('refresh')
-  @UseGuards(JwtRefreshGuard)
-  async refreshAccessToken(
-    @GetUser() user: User,
-    @Res({ passthrough: true }) res: Response,
-  ) {
-    const roles = user.roles.map((role) => role.name);
-    const payload: JwtPayload = {
-      email: user.email,
-      sub: user.id,
-      roles,
-    };
-    const accessToken: string = await this.authService.generateJwtAccessToken(
-      payload,
-    );
-
-    res.cookie('access_token', accessToken, {
+    await this.authService.logout(accessToken, refreshToken);
+    response.cookie('access_token', '', {
+      maxAge: 0,
       httpOnly: true,
-      expires: new Date(
-        Date.now() +
-          this.configServer.get<number>('jwt.accessTokenExpiration') * 1000,
-      ),
-      path: '/',
     });
-  }
-
-  handleLoginResponseData(res: Response, loginResponse: LoginResponse) {
-    res.cookie('access_token', loginResponse.accessToken, {
+    response.cookie('refresh_token', '', {
+      maxAge: 0,
       httpOnly: true,
-      expires: new Date(
-        Date.now() +
-          this.configServer.get<number>('jwt.accessTokenExpiration') * 1000,
-      ),
-      path: '/',
-    });
-    res.cookie('refresh_token', loginResponse.refreshToken, {
-      httpOnly: true,
-      expires: new Date(
-        Date.now() +
-          this.configServer.get<number>('jwt.refreshTokenExpiration') * 1000,
-      ),
-      path: '/',
-    });
-    res.cookie('logged_in', true, {
-      httpOnly: false,
-      expires: new Date(
-        Date.now() +
-          this.configServer.get<number>('jwt.refreshTokenExpiration') * 1000,
-      ),
-      path: '/',
-    });
-    res.cookie('user', JSON.stringify(loginResponse.user), {
-      httpOnly: false,
-      expires: new Date(
-        Date.now() +
-          this.configServer.get<number>('jwt.refreshTokenExpiration') * 1000,
-      ),
-      path: '/',
     });
   }
 }
