@@ -1,12 +1,12 @@
-import { Body, Controller, UseGuards, Post } from '@nestjs/common';
-import { JwtAuthGuard, RolesGuard } from 'src/auth/guards';
+import { Body, Controller, Post } from '@nestjs/common';
+import { Public } from 'nest-keycloak-connect';
 import { Roles } from 'src/common/decorators';
 import { Role } from 'src/permission/enum';
 import { EmailScheduleDto } from './dto';
 import { EmailScheduleService } from './email-schedule.service';
 
 @Controller('email-scheduling')
-@UseGuards(JwtAuthGuard, RolesGuard)
+@Public()
 export default class EmailScheduleController {
   constructor(private emailScheduleService: EmailScheduleService) {}
 

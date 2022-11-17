@@ -1,14 +1,6 @@
-import {
-  BadRequestException,
-  forwardRef,
-  Inject,
-  Injectable,
-  Logger,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { UserInfo } from 'src/common/types';
-import { HubService } from 'src/hub/hub.service';
 import { LoginDto, RegisterDto } from './dto';
 import { KeycloakAuthStrategy } from './strategies';
 

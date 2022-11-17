@@ -6,6 +6,7 @@ import { BookingService } from './booking.service';
 import { HubModule } from 'src/hub/hub.module';
 import { EmailModule } from 'src/email/email.module';
 import { AuthModule } from 'src/auth/auth.module';
+import { BookingGateway } from './booking.gateway';
 
 @Module({
   imports: [
@@ -15,7 +16,7 @@ import { AuthModule } from 'src/auth/auth.module';
     EmailModule,
   ],
   controllers: [BookingController],
-  providers: [BookingService],
+  providers: [BookingService, BookingGateway],
   exports: [BookingService],
 })
 export class BookingModule {}

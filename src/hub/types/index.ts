@@ -27,7 +27,7 @@ export interface PitchSearchBody {
   name: string;
   type: string;
   cost: string;
-  hub: string;
+  hub: any;
 }
 
 export interface PitchSearchResult {

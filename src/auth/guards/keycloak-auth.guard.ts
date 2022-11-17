@@ -44,8 +44,8 @@ export class KeycloakAuthGuard implements CanActivate {
     }
 
     try {
-      // request['user'] = await this.authService.authenticate(token);
-      request['user'] = jwt.decode(accessToken);
+      request['user'] = await this.authService.authenticate(accessToken);
+      // request['user'] = jwt.decode(accessToken);
       return true;
     } catch (error) {
       throw new HttpException(error.message, HttpStatus.UNAUTHORIZED);

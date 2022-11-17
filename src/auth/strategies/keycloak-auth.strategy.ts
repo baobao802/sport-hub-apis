@@ -77,6 +77,7 @@ export class KeycloakAuthStrategy {
         )
       ).data;
     } catch (error) {
+      console.log(error);
       throw new UnauthorizedException(error.response.data?.error_description);
     }
   }
@@ -191,6 +192,7 @@ export class KeycloakAuthStrategy {
         },
       );
     } catch (error) {
+      console.log(error);
       throw new UnauthorizedException();
     }
   }

@@ -20,6 +20,7 @@ export const keycloakConfigAsync: KeycloakConnectModuleAsyncOptions = {
     realm: configService.get<string>('kc.realm'),
     clientId: configService.get<string>('kc.clientId'),
     secret: configService.get<string>('kc.secret'),
+    cookieKey: 'access_token',
   }),
   inject: [ConfigService],
 };

@@ -24,7 +24,7 @@ import { createPaginationResponse } from 'src/utils';
 import { BookingService } from 'src/booking/booking.service';
 import { BookingStatus } from 'src/booking/types';
 import * as moment from 'moment';
-import { AppUser } from 'src/common/types';
+import { UserInfo } from 'src/common/types';
 import { AccountService } from 'src/account/account.service';
 import PitchSearchService from './pitchSearch.service';
 
@@ -113,8 +113,8 @@ export class HubService {
     };
   }
 
-  async getMyHub(user: AppUser): Promise<Hub> {
-    const found = await this.hubRepository.findOneBy({ ownerId: user.sub });
+  async getMyHub(userInfo: UserInfo): Promise<Hub> {
+    const found = await this.hubRepository.findOneBy({ ownerId: userInfo.id });
 
     if (!found) {
       throw new NotFoundException('Your hub not found');
@@ -128,13 +128,13 @@ export class HubService {
     return this.hubRepository.save(hub);
   }
 
-  async updateMyHubBy(user: AppUser, updateHubDto: UpdateHubDto) {
-    const found = await this.getMyHub(user);
+  async updateMyHubBy(userInfo: UserInfo, updateHubDto: UpdateHubDto) {
+    const found = await this.getMyHub(userInfo);
     return this.hubRepository.save({ ...found, ...updateHubDto });
   }
 
-  async createPitch(user: AppUser, createPitchDto: CreatePitchDto) {
-    const hub = await this.getMyHub(user);
+  async createPitch(userInfo: UserInfo, createPitchDto: CreatePitchDto) {
+    const hub = await this.getMyHub(userInfo);
     const pitch = this.pitchRepository.create({
       ...createPitchDto,
       hub,
@@ -232,13 +232,18 @@ export class HubService {
   }
 
   async updatePitchById(
-    user: AppUser,
+    userInfo: UserInfo,
     id: number,
     updatePitchDto: UpdatePitchDto,
   ) {
-    const found = await this.pitchRepository.findOneBy({
-      id,
-      hub: { ownerId: user.sub },
+    const found = await this.pitchRepository.findOne({
+      where: {
+        id,
+        hub: { ownerId: userInfo.id },
+      },
+      relations: {
+        hub: { address: true },
+      },
     });
     if (!found) {
       throw new NotFoundException('The pitch not found');
@@ -247,10 +252,10 @@ export class HubService {
     await this.pitchSearchService.update({ ...found, ...updatePitchDto });
   }
 
-  async deletePitchById(user: AppUser, id: number): Promise<void> {
+  async deletePitchById(userInfo: UserInfo, id: number): Promise<void> {
     const deleteRes = await this.pitchRepository.softDelete({
       id,
-      hub: { ownerId: user.sub },
+      hub: { ownerId: userInfo.id },
     });
 
     if (!deleteRes.affected) {
@@ -259,8 +264,8 @@ export class HubService {
     await this.pitchSearchService.remove(id);
   }
 
-  @Cron(CronExpression.EVERY_10_MINUTES)
-  handleCron() {
-    this.logger.debug('Called every 10 minutes');
-  }
+//  @Cron(CronExpression.EVERY_10_MINUTES)
+//  handleCron() {
+//    this.logger.debug('Called every 10 minutes');
+//  }
 }

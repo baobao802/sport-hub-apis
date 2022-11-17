@@ -15,7 +15,7 @@ import * as moment from 'moment';
 import { Role } from 'src/auth/types';
 import { PaginationParams } from 'src/common/dto';
 import { Pagination } from 'src/common/interfaces';
-import { AppUser } from 'src/common/types';
+import { UserInfo } from 'src/common/types';
 import { EmailService } from 'src/email/email.service';
 import { HubService } from 'src/hub/hub.service';
 import { createPaginationResponse } from 'src/utils';
@@ -37,11 +37,11 @@ export class BookingService {
     private emailService: EmailService,
   ) {}
 
-  async createOne(bookingDto: BookingDto, user: AppUser) {
+  async createOne(bookingDto: BookingDto, userInfo: UserInfo) {
     const pitch = await this.hubService.findPitchById(bookingDto.pitchId);
     const booking = this.bookingRepository.create({
-      customerId: user.sub,
-      customerInfo: user,
+      customerId: userInfo.id,
+      customerInfo: userInfo,
       pitch,
       cityId: bookingDto.cityId,
       cost: bookingDto.cost,
@@ -57,7 +57,7 @@ export class BookingService {
     const job = new CronJob(date, () => {
       this.emailService.sendMail({
         from: 'schedule@sporthub.com',
-        to: user.email,
+        to: userInfo.email,
         subject: 'Nhắc nhở lịch đặt sân.',
         text: `Bạn có lịch đặt sân bóng vào lúc ${date.format(
           'HH:mm, DD/MM/YYYY',
@@ -72,7 +72,7 @@ export class BookingService {
 
   async findAll(
     options: BookingFilterParams & PaginationParams,
-    user?: AppUser,
+    userInfo?: UserInfo,
   ): Promise<Pagination<Booking>> {
     const { cityId, status, date, pitchId, page = 1, size = 20 } = options;
     const findOptions: FindManyOptions<Booking> = {
@@ -84,21 +84,15 @@ export class BookingService {
       },
     };
 
-    if (
-      user &&
-      _.includes(user.resource_access['sport-hub']?.roles, Role.APP_USER)
-    ) {
-      findOptions.where = { ...findOptions.where, customerId: user.sub };
+    if (userInfo && _.includes(userInfo.roles, Role.APP_USER) && !_.includes(userInfo.roles, Role.APP_ADMIN)) {
+      findOptions.where = { ...findOptions.where, customerId: userInfo.id };
       findOptions.relations = { pitch: { hub: true } };
     }
-    if (
-      user &&
-      _.includes(user.resource_access['sport-hub']?.roles, Role.APP_ADMIN)
-    ) {
+    if (userInfo && _.includes(userInfo.roles, Role.APP_ADMIN)) {
       findOptions.where = {
         ...findOptions.where,
         pitch: {
-          hub: { ownerId: user.sub },
+          hub: { ownerId: userInfo.id },
         },
       };
       findOptions.relations = { pitch: true };
@@ -114,7 +108,7 @@ export class BookingService {
     return createPaginationResponse(bookings, count, page, size);
   }
 
-  async cancelBooking(bookingId: number, user: AppUser) {
+  async cancelBooking(bookingId: number, userInfo: UserInfo) {
     const found = await this.bookingRepository.findOneBy({ id: bookingId });
 
     if (!found) {
@@ -130,7 +124,7 @@ export class BookingService {
     }
 
     const deleteRes = await this.bookingRepository.update(
-      { customerId: user.sub, id: bookingId },
+      { customerId: userInfo.id, id: bookingId },
       { status: BookingStatus.CANCEL, deletedAt: new Date() },
     );
 

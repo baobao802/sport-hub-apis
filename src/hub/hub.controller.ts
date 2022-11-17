@@ -9,7 +9,6 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
-import { GetUser } from 'src/common/decorators';
 import { HubService } from './hub.service';
 import {
   CreateHubDto,
@@ -19,10 +18,9 @@ import {
   UpdateHubDto,
   UpdatePitchDto,
 } from './dto';
-import { Hub } from './entities';
 import { PaginationParams } from 'src/common/dto';
-import { AppUser } from 'src/common/types';
-import { Public, Roles } from 'nest-keycloak-connect';
+import { UserInfo } from 'src/common/types';
+import { AuthenticatedUser, Public, Roles } from 'nest-keycloak-connect';
 import { Role } from 'src/auth/types';
 import { KeycloakAuthGuard } from 'src/auth/guards';
 
@@ -40,36 +38,39 @@ export class HubController {
   }
 
   @Post('/hubs')
-  @Public()
+  @Roles({ roles: [Role.APP_ADMIN] })
   @UseGuards(KeycloakAuthGuard)
-  createHub(@GetUser() user: AppUser, @Body() createHubDto: CreateHubDto) {
-    return this.hubService.createHub(user.sub, createHubDto);
+  createHub(
+    @AuthenticatedUser() userInfo: UserInfo,
+    @Body() createHubDto: CreateHubDto,
+  ) {
+    return this.hubService.createHub(userInfo.id, createHubDto);
   }
 
   @Get('/hubs/mine')
-  // @Roles({ roles: [Role.APP_ADMIN] })
-  @Public()
+  @Roles({ roles: [Role.APP_ADMIN] })
   @UseGuards(KeycloakAuthGuard)
-  getMyHub(@GetUser() user: AppUser) {
-    return this.hubService.getMyHub(user);
+  getMyHub(@AuthenticatedUser() userInfo: UserInfo) {
+    return this.hubService.getMyHub(userInfo);
   }
   @Patch('/hubs/mine')
-  // @Roles({ roles: [Role.APP_ADMIN] })
-  @Public()
+  @Roles({ roles: [Role.APP_ADMIN] })
   @UseGuards(KeycloakAuthGuard)
-  updateMyHubBy(@GetUser() user: AppUser, @Body() updateHubDto: UpdateHubDto) {
-    return this.hubService.updateMyHubBy(user, updateHubDto);
+  updateMyHubBy(
+    @AuthenticatedUser() userInfo: UserInfo,
+    @Body() updateHubDto: UpdateHubDto,
+  ) {
+    return this.hubService.updateMyHubBy(userInfo, updateHubDto);
   }
 
   @Post('/hubs/mine/pitches')
-  // @Roles({ roles: [Role.APP_ADMIN] })
-  @Public()
+  @Roles({ roles: [Role.APP_ADMIN] })
   @UseGuards(KeycloakAuthGuard)
   createPitch(
-    @GetUser() user: AppUser,
+    @AuthenticatedUser() userInfo: UserInfo,
     @Body() createPitchDto: CreatePitchDto,
   ) {
-    return this.hubService.createPitch(user, createPitchDto);
+    return this.hubService.createPitch(userInfo, createPitchDto);
   }
 
   @Get('/hubs/:id')
@@ -79,7 +80,6 @@ export class HubController {
   }
 
   // @Get('/available-pitches')
-  // @Public()
   // getAllAvailablePitches(@Query() pitchFilterParams: PitchFilterParams) {
   //   return this.hubService.findAllAvailablePitches(pitchFilterParams);
   // }
@@ -91,22 +91,23 @@ export class HubController {
   }
 
   @Patch('/pitches/:id')
-  // @Roles({ roles: [Role.APP_ADMIN] })
-  @Public()
+  @Roles({ roles: [Role.APP_ADMIN] })
   @UseGuards(KeycloakAuthGuard)
   updatePitchByHubId(
-    @GetUser() user: AppUser,
+    @AuthenticatedUser() userInfo: UserInfo,
     @Param('id') id: number,
     @Body() updatePitchDto: UpdatePitchDto,
   ) {
-    return this.hubService.updatePitchById(user, id, updatePitchDto);
+    return this.hubService.updatePitchById(userInfo, id, updatePitchDto);
   }
 
   @Delete('/pitches/:id')
-  // @Roles({ roles: [Role.APP_ADMIN] })
-  @Public()
+  @Roles({ roles: [Role.APP_ADMIN] })
   @UseGuards(KeycloakAuthGuard)
-  deletePitchByHubId(@GetUser() user: AppUser, @Param('id') id: number) {
-    return this.hubService.deletePitchById(user, id);
+  deletePitchByHubId(
+    @AuthenticatedUser() userInfo: UserInfo,
+    @Param('id') id: number,
+  ) {
+    return this.hubService.deletePitchById(userInfo, id);
   }
 }

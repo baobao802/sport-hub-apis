@@ -20,6 +20,7 @@ export class AuthController {
   constructor(private authService: AuthService) {}
 
   @Get('welcome')
+  @Public()
   @UseGuards(KeycloakAuthGuard)
   async welcome(@GetUser() user: AppUser) {
     return 'Welcome ' + user.preferred_username;
@@ -27,12 +28,14 @@ export class AuthController {
 
   @Get('authenticate')
   @UseGuards(KeycloakAuthGuard)
+  @Public()
   async authenticate(@Req() request: Request) {
     const accessToken = request.cookies['access_token'];
     return this.authService.authenticate(accessToken);
   }
 
   @Post('google')
+  @Public()
   async loginGoogle(
     @Body('accessToken') accessToken: string,
     @Res({ passthrough: true }) response: Response,
@@ -41,17 +44,20 @@ export class AuthController {
     response.cookie('access_token', loginRes.access_token, {
       maxAge: loginRes.expires_in * 1000,
       httpOnly: true,
-      sameSite: 'strict',
+      sameSite: 'none',
+      secure: true,
     });
     response.cookie('refresh_token', loginRes.refresh_token, {
       maxAge: loginRes.refresh_expires_in * 1000,
       httpOnly: true,
-      sameSite: 'strict',
+      sameSite: 'none',
+      secure: true,
     });
     return loginRes;
   }
 
   @Post('login')
+  @Public()
   async login(
     @Body() loginDto: LoginDto,
     @Res({ passthrough: true }) response: Response,
@@ -60,22 +66,26 @@ export class AuthController {
     response.cookie('access_token', loginRes.access_token, {
       maxAge: loginRes.expires_in * 1000,
       httpOnly: true,
-      sameSite: 'strict',
+      sameSite: 'none',
+      secure: true,
     });
     response.cookie('refresh_token', loginRes.refresh_token, {
       maxAge: loginRes.refresh_expires_in * 1000,
       httpOnly: true,
-      sameSite: 'strict',
+      sameSite: 'none',
+      secure: true,
     });
     return loginRes;
   }
 
   @Post('register')
+  @Public()
   signup(@Body() registerDto: RegisterDto) {
     return this.authService.register(registerDto);
   }
 
   @Get('refresh-token')
+  @Public()
   async refreshToken(
     @Req() request: Request,
     @Res({ passthrough: true }) response: Response,
@@ -89,16 +99,19 @@ export class AuthController {
     response.cookie('access_token', tokenResponse.access_token, {
       maxAge: tokenResponse.expires_in * 1000,
       httpOnly: true,
-      sameSite: 'strict',
+      sameSite: 'none',
+      secure: true,
     });
     response.cookie('refresh_token', tokenResponse.refresh_token, {
       maxAge: tokenResponse.refresh_expires_in * 1000,
       httpOnly: true,
-      sameSite: 'strict',
+      sameSite: 'none',
+      secure: true,
     });
   }
 
   @Post('logout')
+  @Public()
   async logout(
     @Req() request: Request,
     @Res({ passthrough: true }) response: Response,

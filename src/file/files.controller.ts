@@ -17,8 +17,10 @@ import { File } from './entities';
 import { FilesService } from './files.service';
 import { FileFilterParams } from './dto';
 import { PaginationParams } from 'src/common/dto';
+import { Public } from 'nest-keycloak-connect';
 
 @Controller('files')
+@Public()
 export class FilesController {
   constructor(
     private configServer: ConfigService,

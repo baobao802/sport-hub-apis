@@ -14,10 +14,13 @@ export default class PitchSearchService {
       index: this.index,
       body: {
         id: pitch.id,
-        name: `sân ${pitch.name}`,
+        name: `${pitch.name}`,
         type: PitchTypeMap[pitch.type],
         cost: JSON.stringify(pitch.cost),
-        hub: JSON.stringify(pitch.hub),
+        hub: JSON.stringify({
+	  name: pitch.hub.name,
+	  address: pitch.hub.address,
+        }),
       },
     });
   }
@@ -27,7 +30,15 @@ export default class PitchSearchService {
     if (text) {
       query['multi_match'] = {
         query: text,
-        fields: ['name', 'type', 'cost', 'hub'],
+        fields: [
+          'name',
+          'type',
+          'cost',
+	  'hub',
+          //'hub.name',
+          //'hub.address.street',
+          //'hub.address.district',
+        ],
       };
     } else {
       query['match_all'] = {};
@@ -44,10 +55,13 @@ export default class PitchSearchService {
   async update(pitch: Pitch) {
     const newBody: PitchSearchBody = {
       id: pitch.id,
-      name: `sân ${pitch.name}`,
+      name: `${pitch.name}`,
       type: PitchTypeMap[pitch.type],
       cost: JSON.stringify(pitch.cost),
-      hub: JSON.stringify(pitch.hub),
+      hub: JSON.stringify({
+        name: pitch.hub.name,
+        address: pitch.hub.address,
+      }),
     };
 
     const script = Object.entries(newBody).reduce((result, [key, value]) => {

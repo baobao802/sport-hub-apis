@@ -1,15 +1,4 @@
-import {
-  Body,
-  Controller,
-  Delete,
-  Get,
-  Param,
-  Post,
-  UseGuards,
-} from '@nestjs/common';
-import { RolesGuard } from 'src/auth/guards';
-import { Roles } from 'src/common/decorators';
-import { Role } from 'src/permission/enum';
+import { Body, Controller, Delete, Get, Param, Post } from '@nestjs/common';
 import { PlaceService } from './place.service';
 import { CreateCityDto, CreateDistrictDto, ImportPlacesDto } from './dto';
 import { City, District } from './entities';
